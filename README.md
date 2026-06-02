@@ -45,8 +45,34 @@ docker build -t llm-publisher .
 
 ### Step B — Run
 
+You have **two ways** to run with Docker:
+
+#### Option 1 (recommended): run Ollama *inside* the container
+
+This is the most “ready-to-go” option. Models will live in the container unless you mount a volume.
+
 ```bash
 docker run --rm -p 8080:8080 llm-publisher
+```
+
+To reuse your **existing host models** (macOS), mount your Ollama model folder:
+
+```bash
+docker run --rm -p 8080:8080 \
+  -v "$HOME/.ollama:/root/.ollama" \
+  llm-publisher
+```
+
+#### Option 2: use Ollama running on your host machine (use host models automatically)
+
+If you already have Ollama + models on the host, you can point the app at it and skip running Ollama in-container:
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e START_OLLAMA=false \
+  -e OLLAMA_BASE_URL="http://host.docker.internal:11434" \
+  -e ALLOW_START_OLLAMA_SERVE=false \
+  llm-publisher
 ```
 
 ### Step C — Open the UI
@@ -110,12 +136,20 @@ Cloudflare quick tunnels are designed for experiments:
 
 ### Docker + Ollama on macOS
 
-This app’s Docker container talks to your host Ollama at:
+If you use **Option 2** (host Ollama), the container reaches your host at:
 - `http://host.docker.internal:11434`
 
-If Step 1 shows “Not reachable” while using Docker:
+If Step 1 shows “Not reachable”:
 - Ensure Ollama is running on your Mac
-- Confirm `http://localhost:11434/api/version` works on the host
+- Confirm this works on the host:
+
+```bash
+curl http://localhost:11434/api/version
+```
+
+If Step 2 shows “No models found”:
+- You are likely running **Option 1** without mounting `~/.ollama`
+- Either mount your host models (`-v "$HOME/.ollama:/root/.ollama"`) or switch to Option 2
 
 ### Security
 
